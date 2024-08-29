@@ -1570,6 +1570,14 @@
           </box>
         </geometry>
       </collision>
+      <collision name ="ground">
+        <pose>4.5271 0 0 0 0 0</pose>
+        <geometry>
+          <plane>
+            <size>23.9 10.3</size>
+          </plane>
+        </geometry>
+      </collision>
       
         </link>
     </model>
