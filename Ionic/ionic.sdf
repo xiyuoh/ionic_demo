@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?xml version="1.0" ?>
-<sdf version="1.5">
+
+<sdf version="1.10">
   <world name="default">
     <gui fullscreen="0">
       <plugin filename="MinimalScene" name="3D View">
@@ -23,7 +23,7 @@
       <!-- Plugins that add functionality to the scene -->
       <plugin filename="GlobalIlluminationVct" name="GI">
         <gz-gui>
-          <property type="string" key="state">docked_collapsed</property>    
+          <property type="string" key="state">docked_collapsed</property>
         </gz-gui>
       </plugin>
       <plugin filename="EntityContextMenuPlugin" name="Entity context menu">
@@ -249,32 +249,9 @@
           <property type="string" key="state">docked_collapsed</property>
         </gz-gui>
       </plugin>
-      
-      <!-- Apply Force and Torque -->
-      <plugin filename="ApplyForceTorque">
-        <gz-gui>
-          <property type="string" key="state">docked_collapsed</property>
-        </gz-gui>
-      </plugin>
-
-      <!-- Mouse Drag -->
-      <plugin filename="MouseDrag">
-        <gz-gui>
-          <property type="string" key="state">docked_collapsed</property>
-        </gz-gui>
-
-        <rotation_stiffness>50</rotation_stiffness>
-        <position_stiffness>200</position_stiffness>
-      </plugin>
-
     </gui>
 
-
     <physics name="1ms" type="ignored">
-      <dart>
-        <!-- Heightmaps behave better with the bullet collision detector -->
-        <collision_detector>bullet</collision_detector>
-      </dart>
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1.0</real_time_factor>
     </physics>
@@ -295,29 +272,13 @@
       filename="gz-sim-scene-broadcaster-system"
       name="gz::sim::systems::SceneBroadcaster">
     </plugin>
-    <plugin
-      filename="gz-sim-buoyancy-system"
-      name="gz::sim::systems::Buoyancy">
-      <graded_buoyancy>
-        <default_density>1000</default_density>
-        <density_change>
-          <above_depth>0</above_depth>
-          <density>1</density>
-        </density_change>
-      </graded_buoyancy>
-      <enable>Tethys</enable>
-    </plugin>
-    <plugin
-      filename="gz-sim-dvl-system"
-      name="gz::sim::systems::DopplerVelocityLogSystem">
-    </plugin>
 
     <scene>
       <ambient>0 0 0</ambient>
       <grid>false</grid>
       <sky></sky>
     </scene>
-  
+
     <!--<light type="directional" name="directional">
       <pose>0 0 4 0 0 0</pose>
       <intensity>3</intensity>
@@ -331,7 +292,7 @@
       </attenuation>
       <cast_shadows>true</cast_shadows>
     </light>-->
-    
+
     <light type="spot" name="spot_grid">
       <pose>-1 0.5 2.75 0 0 0</pose>
       <diffuse>1 1 1 1</diffuse>
@@ -351,7 +312,7 @@
       </spot>
       <cast_shadows>true</cast_shadows>
     </light>
-    
+
     <light type="spot" name="spot_middle">
       <pose>4 1.8 2.5 0 0 0</pose>
       <diffuse>1 1 1 1</diffuse>
@@ -371,7 +332,7 @@
       </spot>
       <cast_shadows>true</cast_shadows>
     </light>
-    
+
     <light type="spot" name="spot_longtable">
       <pose>9 1 2.75 0 0 0</pose>
       <diffuse>1 1 1 1</diffuse>
@@ -391,7 +352,7 @@
       </spot>
       <cast_shadows>true</cast_shadows>
     </light>
-  
+
     <!--<light type="point" name="point">
       <pose>-1 0.5 4 0 0 0</pose>
       <diffuse>1 1 1 1</diffuse>
@@ -405,12 +366,12 @@
       </attenuation>
       <cast_shadows>true</cast_shadows>
     </light>-->
-  
-  
+
+
     <include>
       <name>Interior</name>
       <uri>interior</uri>
     </include>
-    
+
   </world>
 </sdf>

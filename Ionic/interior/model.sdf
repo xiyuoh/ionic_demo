@@ -3,13 +3,14 @@
   <model name="nb_park">
     <static>true</static>
       <link name="base_link">
-        <visual name="Road_visual">
+        <visual name="ionic_visual">
+          <cast_shadows>false</cast_shadows>
           <geometry>
             <mesh>
               <uri>meshes/Ionic.glb</uri>
             </mesh>
           </geometry>
-                
+
         <!--<material>
           <diffuse>0.3 0.3 0.3</diffuse>
           <specular>1.0 1.0 1.0</specular>
@@ -19,9 +20,9 @@
             </metal>
           </pbr>
         </material>-->
-       
+
         </visual>
-            
+
       <collision name ="collider_cylinder.001">
       <pose>11.63203 3.92229 0.34518 0.0 -0.0 0.0</pose>
         <geometry>
@@ -1578,7 +1579,7 @@
           </plane>
         </geometry>
       </collision>
-      
+
         </link>
     </model>
 </sdf>
