@@ -25,6 +25,14 @@
         <gz-gui>
           <property type="string" key="state">docked_collapsed</property>
         </gz-gui>
+        <enabled>true</enabled>
+        <highQuality>true</highQuality>
+        <resolution>16 16 16</resolution>
+        <octantCount>1 1 1</octantCount>
+        <conserveMemory>true</conserveMemory>
+        <thinWallCounter>1.0</thinWallCounter>
+        <anisotropic>true</anisotropic>
+        <bounceCount>6</bounceCount>
       </plugin>
       <plugin filename="EntityContextMenuPlugin" name="Entity context menu">
         <gz-gui>
@@ -372,6 +380,5 @@
       <name>Interior</name>
       <uri>interior</uri>
     </include>
-
   </world>
 </sdf>
