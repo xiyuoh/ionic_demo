@@ -9,3 +9,9 @@ Usage:
 cd Ionic
 gz sim -v 4 ionic.sdf
 ```
+
+
+In Harmonic:
+```
+sudo apt install ros-rolling-ros-gz
+```
