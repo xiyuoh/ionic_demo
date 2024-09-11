@@ -15,3 +15,9 @@ In Harmonic:
 ```
 sudo apt install ros-rolling-ros-gz
 ```
+
+
+
+TODO:
+* Update the map
+* Update the spawning position
