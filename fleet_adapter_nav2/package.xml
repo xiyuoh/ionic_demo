@@ -9,7 +9,11 @@
 
   <exec_depend>launch_xml</exec_depend>
 
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>nav2_simple_commander</exec_depend>
   <exec_depend>rclpy</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
+  <exec_depend>tf_transformations</exec_depend>
 
   <exec_depend>rmf_fleet_adapter_python</exec_depend>
   <exec_depend>rmf_fleet_msgs</exec_depend>

@@ -36,6 +36,9 @@ from rmf_fleet_msgs.msg import ClosedLanes
 from rmf_fleet_msgs.msg import LaneRequest
 from rmf_fleet_msgs.msg import ModeRequest
 from rmf_fleet_msgs.msg import RobotMode
+from tf2_ros.buffer import Buffer as TransformBuffer
+from tf2_ros.transform_listener import TransformListener
+
 import yaml
 
 from .robot_api import RobotAPI
@@ -120,6 +123,8 @@ def main(argv=sys.argv):
     fleet_config.server_uri = server_uri
     fleet_handle = adapter.add_easy_fleet(fleet_config)
 
+    tf_buffer = TransformBuffer()
+
     # Initialize robot API for this fleet
     # TODO(@xiyuoh) update fleet manager fields
     fleet_mgr_yaml = config_yaml['fleet_manager']
@@ -128,7 +133,7 @@ def main(argv=sys.argv):
     )
     api = RobotAPI(
         fleet_mgr_yaml['prefix'], fleet_mgr_yaml['user'],
-        fleet_mgr_yaml['password']
+        fleet_mgr_yaml['password'], tf_buffer
     )
 
     robots = {}
@@ -321,7 +326,7 @@ def update_robot(robot: RobotAdapter):
     robot.update(state, data)
 
 
-def ros_connections(node, robots, fleet_handle):
+def ros_connections(node, robots, fleet_handle, tf_buffer):
     fleet_name = fleet_handle.more().fleet_name
 
     transient_qos = QoSProfile(
@@ -336,6 +341,9 @@ def ros_connections(node, robots, fleet_handle):
     )
 
     closed_lanes = set()
+
+    tf_listener = TransformListener(tf_buffer, node)
+    tf_listener # Avoid unused variable warning
 
     def lane_request_cb(msg):
         if msg.fleet_name and msg.fleet_name != fleet_name:
