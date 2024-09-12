@@ -38,8 +38,8 @@ rmf_fleet:
         # For robot API
         map: "L1"
         prefix: ""
-        target_frame: "base_footprint"
-        from_frame: "map"
+        target_frame: "map"
+        from_frame: "base_footprint"
 
 conversions:
   reference_coordinates:
@@ -49,7 +49,7 @@ conversions:
             [16.05, -29.55], # C
             [9.85, -10.95]] # end
 
-      tb4: [[0.208, -0.106], # start
-            [-3.84, 0.849], # B
-            [-2.32, 1.403], # C
-            [-5.37, 0.444]] # end
+      tb4: [[0, 0], # start
+            [4.038, -2.037], # B
+            [-1.956, -2.060], # C
+            [-3.968, 3.968]] # end
