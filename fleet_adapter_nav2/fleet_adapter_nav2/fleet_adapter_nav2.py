@@ -145,7 +145,9 @@ def main(argv=sys.argv):
 
     # Initialize robot API for this fleet
     update_period = 0.1
-    api = RobotAPI(config_yaml['rmf_fleet']['robots'], node)
+    api = RobotAPI(config_yaml['rmf_fleet']['robots'],
+                   config_yaml['conversions']['map'],
+                   node)
 
     robots = {}
     for robot_name in fleet_config.known_robots:
@@ -276,9 +278,7 @@ class RobotAdapter:
         self.cmd_id += 1
         self.execution = execution
 
-        ########################################################################
-        # IMPLEMENT CODE HERE FOR PERFORM ACTIONS
-        ########################################################################
+        #TODO(@xiyuoh) implement custom actions if any
 
     def finish_action(self):
         # This is triggered by a ModeRequest callback which allows human

@@ -37,8 +37,6 @@ class RobotAPIResult(enum.IntEnum):
 
 
 class RobotUpdateData:
-    """Update data for a single robot."""
-
     def __init__(self, data):
         self.robot_name = data['robot_name']
         position = data['position']
@@ -49,18 +47,17 @@ class RobotUpdateData:
         self.map = data['map_name']
         self.battery_soc = data['battery'] / 100.0
         self.requires_replan = data.get('replan', False)
-
-        # TODO(@xiyuoh) check task completion using nav2 API inside get_data instead
-        self.request_completed = data['request_completed']
+        self.last_request_completed = data['last_request_completed']
 
     def is_command_completed(self, cmd_id):
-        return self.request_completed
+        return self.last_request_completed == cmd_id
 
 
 class RobotAPI:
-    def __init__(self, robots, node):
+    def __init__(self, robots, map_conversion, node):
         self.node = node
         self.robots = robots
+        self.maps = map_conversion
 
         # Initialize nav2 navigator node
         #TODO(@xiyuoh) Enable handling multiple robots and nav2 nodes
@@ -75,6 +72,7 @@ class RobotAPI:
         # nav2 simple commander API feedback
         self.battery_soc = 100 - 1e-9
         self.ongoing_request_cmd_id = None
+        self.last_request_completed = None
 
         # We need the fleet adapter node to create the transform listener
         # instead of using the navigator node as the navigator node only
@@ -110,6 +108,7 @@ class RobotAPI:
             }
 
         timer = node.create_timer(1.0, _tf_listener)
+        timer # Avoid unused variable warning
 
         tf_thread = threading.Thread(target=self.activate_navigator, args=())
         tf_thread.start()
@@ -154,15 +153,12 @@ class RobotAPI:
         assert len(pose) > 2
 
         goal_pose = PoseStamped()
-        goal_pose.header.frame_id = map_name
+        goal_pose.header.frame_id = self.maps[map_name]
         goal_pose.header.stamp = self.navigator.get_clock().now().to_msg()
         goal_pose.pose.position.x = pose[0]
         goal_pose.pose.position.y = pose[1]
         goal_pose.pose.orientation.w = pose[2]
         goal_pose.pose.orientation.z = 0.0
-
-        # sanity check a valid path exists
-        # path = self.navigator.getPath(initial_pose, goal_pose)
 
         self.navigator.goToPose(goal_pose)
         self.ongoing_request_cmd_id = cmd_id
@@ -172,9 +168,7 @@ class RobotAPI:
     def start_activity(
         self, robot_name: str, cmd_id: int, activity: str, label: str
     ):
-        ########################################################################
-        # IMPLEMENT CODE HERE
-        ########################################################################
+        #TODO(@xiyuoh) implement custom actions if any
         return RobotAPIResult.RETRY
 
     def stop(self, robot_name: str, cmd_id: int):
@@ -203,12 +197,20 @@ class RobotAPI:
             )
             return
 
+        if self.ongoing_request_cmd_id is not None and \
+                self.navigator.isTaskComplete():
+            self.node.get_logger().info(
+                f'Robot [{robot_name}] completed task with cmd id '
+                f'[{self.ongoing_request_cmd_id}]'
+            )
+            self.last_request_completed = self.ongoing_request_cmd_id
+            self.ongoing_request_cmd_id = None
+
         data = {
             "robot_name": robot_name,
             "position": self.position,
             "map_name": self.robots[robot_name]['map'],
             "battery": self.battery_soc,
-            "request_completed": self.node.isTaskComplete() if \
-                self.ongoing_request_cmd_id is not None else True
+            "last_request_completed": self.last_request_completed
         }
         return RobotUpdateData(data)
