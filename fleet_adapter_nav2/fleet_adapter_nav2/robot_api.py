@@ -81,7 +81,7 @@ class RobotAPI:
         # activates after we set the initial pose of the robot, which we'd
         # need the TF info to do.
         self.tf_buffer = TransformBuffer()
-        tf_listener = TransformListener(self.tf_buffer, node)   
+        tf_listener = TransformListener(self.tf_buffer, node)
         tf_listener # Avoid unused variable warning
 
         self.position = None
@@ -116,7 +116,7 @@ class RobotAPI:
 
     def activate_navigator(self):
         while self.get_data(self.robot_name) is None:
-            self.node.get_logger.info(
+            self.node.get_logger().info(
                 f'Unable to retrieve robot data!'
             )
             time.sleep(1)
