@@ -28,6 +28,9 @@ def generate_launch_description():
                       'worlds',
                       'ionic.sdf'
                 ]),
+                'x_pose': '0.0',
+                'y_pose': '0.0',
+                'z_pose': '0.0'
             }.items()
         )
     ])

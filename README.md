@@ -16,8 +16,13 @@ In Harmonic:
 sudo apt install ros-rolling-ros-gz
 ```
 
+# navigation demo
 
+```
+# Launches the simulation with a spawned turtlebot4
+ros2 launch ionic_demo ionic_navigation_demo_launch.py headless:=0
+```
 
-TODO:
-* Update the map
-* Update the spawning position
+On rviz, initialize the position at the origin towards the right of the map.
+
+Give navigation commands as per normal.
