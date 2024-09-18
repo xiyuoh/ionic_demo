@@ -48,3 +48,9 @@ On rviz, initialize the position at the origin towards the right of the map and 
 # Troubleshooting
 
 * If there are communication/middleware related issues while running the demos, we recommend trying again [using a different RMW implementation](https://docs.ros.org/en/jazzy/How-To-Guides/Working-with-multiple-RMW-implementations.html#specifying-rmw-implementations), for example `rmw_cyclonedds_cpp`.
+
+
+# TODOs
+
+* package descriptions
+* fleet adapter
