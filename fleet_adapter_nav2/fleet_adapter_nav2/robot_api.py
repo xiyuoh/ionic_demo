@@ -13,11 +13,16 @@
 # limitations under the License.
 
 import enum
+import time
+import threading
 
 import rclpy
 from tf2_ros import TransformException
 from tf2_ros.buffer import Buffer as TransformBuffer
+from tf2_ros.transform_listener import TransformListener
 import tf_transformations
+from geometry_msgs.msg import PoseStamped
+from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 
 
 class RobotAPIResult(enum.IntEnum):
@@ -32,8 +37,6 @@ class RobotAPIResult(enum.IntEnum):
 
 
 class RobotUpdateData:
-    """Update data for a single robot."""
-
     def __init__(self, data):
         self.robot_name = data['robot_name']
         position = data['position']
@@ -44,38 +47,95 @@ class RobotUpdateData:
         self.map = data['map_name']
         self.battery_soc = data['battery'] / 100.0
         self.requires_replan = data.get('replan', False)
-
-        # TODO(@xiyuoh) check task completion using nav2 API inside get_data instead
-        self.last_request_completed = data['last_completed_request']
+        self.last_request_completed = data['last_request_completed']
 
     def is_command_completed(self, cmd_id):
         return self.last_request_completed == cmd_id
 
 
 class RobotAPI:
-    # The constructor below accepts parameters typically required to submit
-    # http requests. Users should modify the constructor as per the
-    # requirements of their robot's API
-    def __init__(self, prefix: str, tf_buffer: TransformBuffer):
-        self.prefix = prefix
-        self.base_frame = f"{self.prefix}/base_footprint"
-        self.map_frame = f"{self.prefix}/map"
-        self.tf_buffer = tf_buffer
+    def __init__(self, robots, map_conversion, node):
+        self.node = node
+        self.robots = robots
+        self.maps = map_conversion
+
+        # Initialize nav2 navigator node
+        #TODO(@xiyuoh) Enable handling multiple robots and nav2 nodes
+        self.navigator = BasicNavigator('nav2_simple_commander_node')
+        self.robot_name = 'tb4_1'
+
+        self.prefix = robots[self.robot_name]["prefix"]
         self.timeout = 5.0
         self.debug = False
 
         # TODO(AC): Populate these fields properly via ROS 2 subscriptions and
         # nav2 simple commander API feedback
         self.battery_soc = 100 - 1e-9
-        self.last_completed_request = None
+        self.ongoing_request_cmd_id = None
+        self.last_request_completed = None
 
+        # We need the fleet adapter node to create the transform listener
+        # instead of using the navigator node as the navigator node only
+        # activates after we set the initial pose of the robot, which we'd
+        # need the TF info to do.
+        self.tf_buffer = TransformBuffer()
+        tf_listener = TransformListener(self.tf_buffer, node)
+        tf_listener # Avoid unused variable warning
 
-    def check_connection(self):
-        """Return True if connection to the robot API server is successful."""
-        ########################################################################
-        # IMPLEMENT CODE HERE
-        ########################################################################
-        return False
+        self.position = None
+        def _tf_listener():
+            transform_stamped = None
+            try:
+                transform_stamped = self.tf_buffer.lookup_transform(
+                    self.robots[self.robot_name]["target_frame"],
+                    self.robots[self.robot_name]["from_frame"],
+                    rclpy.time.Time())
+            except TransformException as ex:
+                self.node.get_logger().info(
+                    f'Could not transform base_footprint to map: {ex}')
+                return None
+
+            theta = tf_transformations.euler_from_quaternion([
+                transform_stamped.transform.rotation.x,
+                transform_stamped.transform.rotation.y,
+                transform_stamped.transform.rotation.z,
+                transform_stamped.transform.rotation.w
+            ])[2]
+            self.position = {
+                "x": transform_stamped.transform.translation.x,
+                "y": transform_stamped.transform.translation.y,
+                "yaw": theta,
+            }
+
+        timer = node.create_timer(1.0, _tf_listener)
+        timer # Avoid unused variable warning
+
+        tf_thread = threading.Thread(target=self.activate_navigator, args=())
+        tf_thread.start()
+
+    def activate_navigator(self):
+        while self.get_data(self.robot_name) is None:
+            self.node.get_logger().info(
+                f'Unable to retrieve robot data!'
+            )
+            time.sleep(1)
+
+        self.node.get_logger().info(
+            f'Successfully retrieved robot data!'
+        )
+
+        # Set initial pose of robot
+        robot_data = self.get_data(self.robot_name)
+        initial_pose = PoseStamped()
+        initial_pose.header.frame_id = 'map'
+        initial_pose.header.stamp = self.navigator.get_clock().now().to_msg()
+        initial_pose.pose.position.x = robot_data.position[0]
+        initial_pose.pose.position.y = robot_data.position[1]
+        initial_pose.pose.orientation.w = robot_data.position[2]
+        initial_pose.pose.orientation.z = 0.0
+        self.navigator.setInitialPose(initial_pose)
+
+        self.navigator.waitUntilNav2Active()
 
     def navigate(
         self,
@@ -85,81 +145,72 @@ class RobotAPI:
         map_name: str,
         speed_limit=0.0,
     ):
-        """
-        Request the robot to navigate to pose:[x,y,theta].
-
-        Where x, y and theta are in the robot's coordinate convention.
-        This function should return True if the robot has accepted the request,
-        else False.
-        """
+        if robot_name not in self.robots:
+            self.navigator.get_logger().info(
+                f'Robot [{robot_name}] not registered in fleet, ignoring...'
+            )
+            return
         assert len(pose) > 2
-        ########################################################################
-        # IMPLEMENT CODE HERE
-        ########################################################################
-        return False
+
+        goal_pose = PoseStamped()
+        goal_pose.header.frame_id = self.maps[map_name]
+        goal_pose.header.stamp = self.navigator.get_clock().now().to_msg()
+        goal_pose.pose.position.x = pose[0]
+        goal_pose.pose.position.y = pose[1]
+        goal_pose.pose.orientation.w = pose[2]
+        goal_pose.pose.orientation.z = 0.0
+
+        self.navigator.goToPose(goal_pose)
+        self.ongoing_request_cmd_id = cmd_id
+
+        return True
 
     def start_activity(
         self, robot_name: str, cmd_id: int, activity: str, label: str
     ):
-        """
-        Request the robot to begin a process.
-
-        This is specific to the robot and the use case.
-        """
-        ########################################################################
-        # IMPLEMENT CODE HERE
-        ########################################################################
+        #TODO(@xiyuoh) implement custom actions if any
         return RobotAPIResult.RETRY
 
     def stop(self, robot_name: str, cmd_id: int):
-        """
-        Command the robot to stop.
-
-        Return True if robot has successfully stopped. Else False
-        """
-        ########################################################################
-        # IMPLEMENT CODE HERE
-        ########################################################################
+        if robot_name not in self.robots:
+            self.navigator.get_logger().info(
+                f'Robot [{robot_name}] not registered in fleet, ignoring...'
+            )
+            return
+        if self.ongoing_request_cmd_id is None:
+            return True
+        if self.ongoing_request_cmd_id == cmd_id:
+            self.navigator.cancelTask()
+            return True
         return False
 
     def get_data(self, robot_name: str | None = None):
-        """
-        Return a RobotUpdateData for one robot if a name is given.
-
-        Otherwise return a list of RobotUpdateData for all robots.
-        """
-        if robot_name is not self.robot_name:
-            raise RuntimeError(
-                f"Calling get_data with robot [{robot_name}] while RobotAPI is for robot [{self.robot_name}]"
+        if robot_name not in self.robots:
+            self.node.get_logger().info(
+                f'Robot [{robot_name}] not registered in fleet, ignoring...'
             )
-
-        transform_stamped = None
-        try:
-            transform_stamped = self.tf_buffer.lookup_transform(
-                self.base_frame,
-                self.map_frame,
-                rclpy.time.Time())
-        except TransformException as ex:
-            self.get_logger().info(
-                f'Could not transform {self.base_frame} to {self.map_frame}: {ex}')
             return None
 
-        theta = tf_transformations.euler_from_quaternion([
-            transform_stamped.transform.rotation.x,
-            transform_stamped.transform.rotation.y,
-            transform_stamped.transform.rotation.z,
-            transform_stamped.transform.rotation.w
-        ])[2]
-        position = {
-            "x": transform_stamped.transform.translation.x,
-            "y": transform_stamped.transform.translation.y,
-            "yaw": theta,
-        }
+        if self.position is None:
+            self.node.get_logger().info(
+                f'No position found!'
+            )
+            return
+
+        if self.ongoing_request_cmd_id is not None and \
+                self.navigator.isTaskComplete():
+            self.node.get_logger().info(
+                f'Robot [{robot_name}] completed task with cmd id '
+                f'[{self.ongoing_request_cmd_id}]'
+            )
+            self.last_request_completed = self.ongoing_request_cmd_id
+            self.ongoing_request_cmd_id = None
+
         data = {
-            "robot_name": self.robot_name,
-            "position": position,
-            "map_name": self.map_name,
+            "robot_name": robot_name,
+            "position": self.position,
+            "map_name": self.robots[robot_name]['map'],
             "battery": self.battery_soc,
-            "last_completed_request": self.last_completed_request
+            "last_request_completed": self.last_request_completed
         }
-        return data
+        return RobotUpdateData(data)

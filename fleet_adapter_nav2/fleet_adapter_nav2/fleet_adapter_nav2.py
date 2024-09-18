@@ -15,10 +15,10 @@
 import argparse
 import asyncio
 import faulthandler
-import math
 import sys
 import threading
 import time
+import nudged
 
 import rclpy
 from rclpy.duration import Duration
@@ -32,18 +32,34 @@ from rclpy.qos import QoSReliabilityPolicy as Reliability
 import rmf_adapter
 from rmf_adapter import Adapter
 import rmf_adapter.easy_full_control as rmf_easy
+from rmf_adapter import Transformation
 from rmf_fleet_msgs.msg import ClosedLanes
 from rmf_fleet_msgs.msg import LaneRequest
 from rmf_fleet_msgs.msg import ModeRequest
 from rmf_fleet_msgs.msg import RobotMode
-from tf2_ros.buffer import Buffer as TransformBuffer
-from tf2_ros.transform_listener import TransformListener
 
 import yaml
 
 from .robot_api import RobotAPI
 from .robot_api import RobotAPIResult
 from .robot_api import RobotUpdateData
+
+
+def compute_transforms(level, coords, node=None):
+    rmf_coords = coords['rmf']
+    tb4_coords = coords['tb4']
+    tf = nudged.estimate(rmf_coords, tb4_coords)
+    if node:
+        mse = nudged.estimate_error(tf, rmf_coords, tb4_coords)
+        node.get_logger().info(
+            f"Transformation error estimate for {level}: {mse}"
+        )
+
+    return Transformation(
+        tf.get_rotation(),
+        tf.get_scale(),
+        tf.get_translation()
+    )
 
 
 # ------------------------------------------------------------------------------
@@ -104,6 +120,10 @@ def main(argv=sys.argv):
         'Please ensure RMF Schedule Node is running'
     )
 
+    for level, coords in config_yaml['conversions']['reference_coordinates'].items():
+        tf = compute_transforms(level, coords, node)
+        fleet_config.add_robot_coordinates_transformation(level, tf)
+
     # Enable sim time for testing offline
     if args.use_sim_time:
         param = Parameter('use_sim_time', Parameter.Type.BOOL, True)
@@ -123,18 +143,11 @@ def main(argv=sys.argv):
     fleet_config.server_uri = server_uri
     fleet_handle = adapter.add_easy_fleet(fleet_config)
 
-    tf_buffer = TransformBuffer()
-
     # Initialize robot API for this fleet
-    # TODO(@xiyuoh) update fleet manager fields
-    fleet_mgr_yaml = config_yaml['fleet_manager']
-    update_period = 1.0 / fleet_mgr_yaml.get(
-        'robot_state_update_frequency', 10.0
-    )
-    api = RobotAPI(
-        fleet_mgr_yaml['prefix'], fleet_mgr_yaml['user'],
-        fleet_mgr_yaml['password'], tf_buffer
-    )
+    update_period = 0.1
+    api = RobotAPI(config_yaml['rmf_fleet']['robots'],
+                   config_yaml['conversions']['map'],
+                   node)
 
     robots = {}
     for robot_name in fleet_config.known_robots:
@@ -265,9 +278,7 @@ class RobotAdapter:
         self.cmd_id += 1
         self.execution = execution
 
-        ########################################################################
-        # IMPLEMENT CODE HERE FOR PERFORM ACTIONS
-        ########################################################################
+        #TODO(@xiyuoh) implement custom actions if any
 
     def finish_action(self):
         # This is triggered by a ModeRequest callback which allows human
@@ -326,7 +337,7 @@ def update_robot(robot: RobotAdapter):
     robot.update(state, data)
 
 
-def ros_connections(node, robots, fleet_handle, tf_buffer):
+def ros_connections(node, robots, fleet_handle):
     fleet_name = fleet_handle.more().fleet_name
 
     transient_qos = QoSProfile(
@@ -341,9 +352,6 @@ def ros_connections(node, robots, fleet_handle, tf_buffer):
     )
 
     closed_lanes = set()
-
-    tf_listener = TransformListener(tf_buffer, node)
-    tf_listener # Avoid unused variable warning
 
     def lane_request_cb(msg):
         if msg.fleet_name and msg.fleet_name != fleet_name:
