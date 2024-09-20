@@ -85,8 +85,8 @@ repositories:
     version: main
   nav2_minimal_turtlebot_simulation:
     type: git
-    url: https://github.com/ros-navigation/nav2_minimal_turtlebot_simulation
-    version: main
+    url: https://github.com/luca-della-vedova/nav2_minimal_turtlebot_simulation
+    version: luca/namespaced_simulation
   panda_ign_moveit2:
     type: git
     url: https://github.com/luca-della-vedova/panda_ign_moveit2/

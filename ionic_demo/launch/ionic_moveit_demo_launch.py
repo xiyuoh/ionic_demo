@@ -100,5 +100,33 @@ def generate_launch_description():
                 {"use_sim_time": True},
             ],
         ),
+        IncludeLaunchDescription(
+            PythonLaunchDescriptionSource([
+                PathJoinSubstitution([
+                    FindPackageShare('nav2_bringup'),
+                    'launch',
+                    'tb4_simulation_launch.py'
+                ])
+            ]),
+            launch_arguments={
+                'map': PathJoinSubstitution([
+                   FindPackageShare('ionic_demo'),
+                      'maps',
+                      'ionic_demo.yaml'
+                ]),
+                'world': PathJoinSubstitution([
+                   FindPackageShare('ionic_demo'),
+                      'worlds',
+                      'ionic.sdf'
+                ]),
+                'namespace': '/tb4',
+                'use_namespace': 'true',
+                'headless': '0',
+                'use_simulator': 'False',
+                'x_pose': '0.0',
+                'y_pose': '0.0',
+                'z_pose': '0.0'
+            }.items()
+        )
     ])
 
