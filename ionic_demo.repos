@@ -77,8 +77,8 @@ repositories:
     version: rolling
   ionic_demo:
     type: git
-    url: https://github.com/gazebosim/ionic_demo.git
-    version: main
+    url: https://github.com/luca-della-vedova/ionic_demo.git
+    version: luca/moveit_demo
   navigation2:
     type: git
     url: https://github.com/ros-navigation/navigation2
@@ -89,8 +89,8 @@ repositories:
     version: main
   panda_ign_moveit2:
     type: git
-    url: https://github.com/azeey/panda_ign_moveit2/
-    version: ionic_demo
+    url: https://github.com/luca-della-vedova/panda_ign_moveit2/
+    version: luca/panda_ionic_demo
   ros_gz:
     type: git
     url: https://github.com/gazebosim/ros_gz
