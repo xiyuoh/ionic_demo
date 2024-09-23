@@ -15,6 +15,7 @@
 from pathlib import Path
 
 from ament_index_python.packages import get_package_share_directory
+from launch_ros.actions import Node
 
 from launch import LaunchDescription
 from launch.actions import (
@@ -24,6 +25,7 @@ from launch.actions import (
 )
 from launch.conditions import UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 
 
@@ -35,6 +37,10 @@ def generate_launch_description():
     declare_headless_cmd = DeclareLaunchArgument(
         'headless', default_value='False', description='Whether to execute gzclient)'
     )
+
+    rmf_demos_dir = Path(get_package_share_directory('rmf_demos'))
+    ionic_maps_dir = Path(get_package_share_directory('ionic_demo_building_maps'))
+    fleet_adapter_dir = Path(get_package_share_directory('fleet_adapter_nav2'))
 
     return LaunchDescription(
         [
@@ -53,6 +59,27 @@ def generate_launch_description():
                 cmd=['gz', 'sim', '-g', '-v4'],
                 output='screen',
                 condition=UnlessCondition(headless),
+            ),
+            # Launch RMF and RMF fleet adapter
+            IncludeLaunchDescription(
+                XMLLaunchDescriptionSource(
+                    str(rmf_demos_dir / 'launch' / 'common.launch.xml')
+                ),
+                launch_arguments={
+                    'use_sim_time': 'True',
+                    'headless': 'True',
+                    'config_file': str(ionic_maps_dir / 'ionic_demo' / 'ionic_demo.building.yaml'),
+                }.items(),
+            ),
+            Node(
+                package="fleet_adapter_nav2",
+                executable="fleet_adapter",
+                output="log",
+                arguments=[
+                    "-c", str(fleet_adapter_dir / 'config' / 'tb4.config.yaml'),
+                    "-n", str(ionic_maps_dir / 'maps' / 'ionic_demo' / 'nav_graphs' / '0.yaml')
+                ],
+                parameters=[{"use_sim_time": True}],
             ),
         ]
     )
