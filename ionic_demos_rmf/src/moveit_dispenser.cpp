@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <rmf_dispenser_msgs/msg/dispenser_request.hpp>
+#include <rmf_dispenser_msgs/msg/dispenser_result.hpp>
 #include <rmf_dispenser_msgs/msg/dispenser_state.hpp>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <rclcpp/rclcpp.hpp>
@@ -23,12 +24,17 @@
 #include <gz/sim/System.hh>
 
 #include <chrono>
+#include <unordered_set>
 
 const std::string MOVE_GROUP = "arm";
 const std::string GRIPPER_GROUP = "gripper";
 
 using namespace gz::sim;
 using namespace std::chrono_literals;
+
+using rmf_dispenser_msgs::msg::DispenserRequest;
+using rmf_dispenser_msgs::msg::DispenserResult;
+using rmf_dispenser_msgs::msg::DispenserState;
 
 /* PRE_GRASP
  * -11
@@ -78,10 +84,11 @@ public:
   MoveItFollowTarget();
 
 private:
-  void dispenser_request_callback(const rmf_dispenser_msgs::msg::DispenserRequest::ConstSharedPtr msg);
+  void dispenser_request_callback(const DispenserRequest::ConstSharedPtr msg);
 
   void timer_callback();
   void publish_dispenser_state(bool busy);
+  void publish_dispenser_result(uint8_t result);
 
   /// Move group interface for the robot
   moveit::planning_interface::MoveGroupInterface move_group_;
@@ -89,14 +96,18 @@ private:
   moveit::planning_interface::MoveGroupInterface gripper_move_group_;
 
   /// RMF dispenser interfaces
-  rclcpp::Subscription<rmf_dispenser_msgs::msg::DispenserRequest>::SharedPtr dispenser_request_sub_;
-  rclcpp::Publisher<rmf_dispenser_msgs::msg::DispenserState>::SharedPtr dispenser_state_pub_;
+  rclcpp::Subscription<DispenserRequest>::SharedPtr dispenser_request_sub_;
+  rclcpp::Publisher<DispenserResult>::SharedPtr dispenser_result_pub_;
+  rclcpp::Publisher<DispenserState>::SharedPtr dispenser_state_pub_;
 
   gz::transport::Node gz_node_;
   gz::transport::Node::Publisher attaching_pub_;
   gz::transport::Node::Publisher detaching_pub_;
-  bool attach_requested_ = false;
   rclcpp::TimerBase::SharedPtr timer_;
+
+  bool attach_requested_ = false;
+  std::unordered_set<std::string> past_request_guids_;
+  std::string last_request_guid_;
 };
 
 MoveItFollowTarget::MoveItFollowTarget() : Node("ex_follow_target"),
@@ -110,8 +121,9 @@ MoveItFollowTarget::MoveItFollowTarget() : Node("ex_follow_target"),
   attaching_pub_ = gz_node_.Advertise<gz::msgs::Empty>("/panda/attach");
   detaching_pub_ = gz_node_.Advertise<gz::msgs::Empty>("/panda/detach");
 
-  dispenser_state_pub_ = this->create_publisher<rmf_dispenser_msgs::msg::DispenserState>("/dispenser_states", rclcpp::QoS(10));
-  dispenser_request_sub_ = this->create_subscription<rmf_dispenser_msgs::msg::DispenserRequest>("/dispenser_requests", rclcpp::QoS(1), std::bind(&MoveItFollowTarget::dispenser_request_callback, this, std::placeholders::_1));
+  dispenser_state_pub_ = this->create_publisher<DispenserState>("/dispenser_states", rclcpp::QoS(10));
+  dispenser_result_pub_ = this->create_publisher<DispenserResult>("/dispenser_results", rclcpp::QoS(10));
+  dispenser_request_sub_ = this->create_subscription<DispenserRequest>("/dispenser_requests", rclcpp::QoS(1), std::bind(&MoveItFollowTarget::dispenser_request_callback, this, std::placeholders::_1));
   timer_ = this->create_wall_timer(500ms, std::bind(&MoveItFollowTarget::timer_callback, this));
 
   RCLCPP_INFO(this->get_logger(), "Initialization successful.");
@@ -130,16 +142,40 @@ void MoveItFollowTarget::timer_callback()
 
 void MoveItFollowTarget::publish_dispenser_state(bool busy)
 {
-  rmf_dispenser_msgs::msg::DispenserState msg;
+  DispenserState msg;
+  msg.time = this->get_clock()->now();
   msg.guid = "moveit_dispenser";
-  msg.mode = busy ? msg.BUSY : msg.IDLE;
+  if (busy)
+  {
+    msg.mode = msg.BUSY;
+    msg.request_guid_queue = {this->last_request_guid_};
+  }
+  else
+  {
+    msg.mode = msg.IDLE;
+  }
   dispenser_state_pub_->publish(msg);
 }
 
-void MoveItFollowTarget::dispenser_request_callback(const rmf_dispenser_msgs::msg::DispenserRequest::ConstSharedPtr msg)
+void MoveItFollowTarget::publish_dispenser_result(uint8_t result)
+{
+  DispenserResult msg;
+  msg.time = this->get_clock()->now();
+  msg.source_guid = "moveit_dispenser";
+  msg.request_guid = this->last_request_guid_;
+  msg.status = result;
+  dispenser_result_pub_->publish(msg);
+}
+
+void MoveItFollowTarget::dispenser_request_callback(const DispenserRequest::ConstSharedPtr msg)
 {
   if (msg->target_guid != "moveit_dispenser")
     return;
+  if (past_request_guids_.find(msg->request_guid) != past_request_guids_.end())
+    return;
+  this->last_request_guid_ = msg->request_guid;
+  this->past_request_guids_.insert(msg->request_guid);
+  this->publish_dispenser_result(DispenserResult::ACKNOWLEDGED);
   this->publish_dispenser_state(true);
   gz::msgs::Empty req;
   RCLCPP_INFO(this->get_logger(), "Received dispenser request");
@@ -177,6 +213,7 @@ void MoveItFollowTarget::dispenser_request_callback(const rmf_dispenser_msgs::ms
   this->move_group_.setJointValueTarget(ready);
   this->move_group_.move();
   this->publish_dispenser_state(false);
+  this->publish_dispenser_result(DispenserResult::SUCCESS);
 }
 
 int main(int argc, char *argv[])
