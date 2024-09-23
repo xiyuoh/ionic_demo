@@ -36,7 +36,7 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 RUN . /opt/ros/rolling/setup.sh \
-      && MAKEFLAGS=-j6 GZ_RELAX_VERSION_MATCH=1 colcon build --symlink-install --packages-up-to ionic_demo --cmake-args -DNO_DOWNLOAD_MODELS=On -DSKIP_RMF_BUILDING_QT_PLUGINS=On
+      && MAKEFLAGS=-j6 GZ_RELAX_VERSION_MATCH=1 colcon build --symlink-install --packages-up-to ionic_demo --cmake-args -DNO_DOWNLOAD_MODELS=On -DSKIP_QT_MOC_PLUGINS=On
 COPY entrypoint.sh /ionic_entrypoint.sh
 ENTRYPOINT ["/ionic_entrypoint.sh"]
 CMD ["bash"]
