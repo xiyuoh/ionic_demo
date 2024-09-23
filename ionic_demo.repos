@@ -78,7 +78,7 @@ repositories:
   ionic_demo:
     type: git
     url: https://github.com/xiyuoh/ionic_demo.git
-    version: luca/moveit_demo
+    version: main
   navigation2:
     type: git
     url: https://github.com/ros-navigation/navigation2
