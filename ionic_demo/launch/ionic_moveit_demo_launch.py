@@ -14,18 +14,20 @@
 
 from pathlib import Path
 
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_share_directory, get_package_prefix
 from launch_ros.actions import Node
-from launch_ros.substitutions import FindPackageShare
+from launch_ros.substitutions import FindPackageShare, FindPackagePrefix
 
 from launch import LaunchDescription
-from launch.actions import IncludeLaunchDescription
+from launch.actions import AppendEnvironmentVariable, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, TextSubstitution
 
 
 def generate_launch_description():
     ionic_demo_dir = Path(get_package_share_directory('ionic_demo'))
+    rmf_demo_assets_dir = Path(get_package_share_directory('rmf_demos_assets')) / 'models'
+    rmf_plugins_dir = Path(get_package_prefix('rmf_robot_sim_gz_plugins')) / 'lib' / 'rmf_robot_sim_gz_plugins'
     coke_can_string = \
     '''
     <sdf version="1.6">
@@ -37,6 +39,25 @@ def generate_launch_description():
         </include>
     </sdf>
     '''
+
+    teleport_ingestor_string = \
+    '''
+    <sdf version="1.6">
+        <include>
+            <name>coke_ingestor</name>
+            <uri>
+                model://TeleportIngestor
+            </uri>
+        </include>
+    </sdf>
+    '''
+
+    set_resource_path_vars = AppendEnvironmentVariable(
+        'GZ_SIM_RESOURCE_PATH', str(rmf_demo_assets_dir)
+    )
+    set_plugin_path_vars = AppendEnvironmentVariable(
+        'GZ_SIM_SYSTEM_PLUGIN_PATH', str(rmf_plugins_dir)
+    )
 
     # URDF
     _robot_description_xml = Command(
@@ -78,6 +99,8 @@ def generate_launch_description():
     nav2_launch_dir = nav2_bringup_dir / 'launch'
 
     return LaunchDescription([
+        set_resource_path_vars,
+        set_plugin_path_vars,
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
                 PathJoinSubstitution([
@@ -93,7 +116,7 @@ def generate_launch_description():
                       'ionic.sdf'
                 ]),
                 'panda_x': '4.3',
-                'panda_y': '0.2',
+                'panda_y': '0.3',
                 'panda_z': '1.2',
             }.items()
         ),
@@ -105,13 +128,26 @@ def generate_launch_description():
             arguments=[
                 "-string", coke_can_string,
                 "-x", "4.9",
-                "-y", "0.2",
+                "-y", "0.3",
                 "-z", "1.2",
             ],
             parameters=[{"use_sim_time": True}],
         ),
         Node(
             # Spawn a can for delivery
+            package="ros_gz_sim",
+            executable="create",
+            output="log",
+            arguments=[
+                "-string", teleport_ingestor_string,
+                "-x", "-0.6",
+                "-y", "2.6",
+                "-z", "0.9",
+            ],
+            parameters=[{"use_sim_time": True}],
+        ),
+        Node(
+            # Dispenser node to control moveit arm
             package="ionic_demos_rmf",
             executable="moveit_dispenser",
             output="log",
