@@ -61,8 +61,8 @@ class RobotAPI:
 
         # Initialize nav2 navigator node
         #TODO(@xiyuoh) Enable handling multiple robots and nav2 nodes
-        self.navigator = BasicNavigator('nav2_simple_commander_node')
-        self.robot_name = 'tb4_1'
+        self.navigator = BasicNavigator('nav2_simple_commander_node', namespace='/tb4')
+        self.robot_name = 'tb4'
 
         self.prefix = robots[self.robot_name]["prefix"]
         self.timeout = 5.0
