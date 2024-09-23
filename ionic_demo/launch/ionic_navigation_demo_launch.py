@@ -63,7 +63,7 @@ def generate_launch_description():
             # Launch RMF and RMF fleet adapter
             IncludeLaunchDescription(
                 XMLLaunchDescriptionSource(
-                    str(rmf_demos_dir / 'launch' / 'common.launch.xml')
+                    str(rmf_demos_dir / 'common.launch.xml')
                 ),
                 launch_arguments={
                     'use_sim_time': 'True',
@@ -76,7 +76,7 @@ def generate_launch_description():
                 executable="fleet_adapter",
                 output="log",
                 arguments=[
-                    "-c", str(fleet_adapter_dir / 'config' / 'tb4.config.yaml'),
+                    "-c", str(fleet_adapter_dir / 'config' / 'tb4_config.yaml'),
                     "-n", str(ionic_maps_dir / 'maps' / 'ionic_demo' / 'nav_graphs' / '0.yaml')
                 ],
                 parameters=[{"use_sim_time": True}],
