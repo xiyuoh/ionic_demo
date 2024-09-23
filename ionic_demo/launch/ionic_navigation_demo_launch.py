@@ -33,7 +33,7 @@ def generate_launch_description():
     launch_dir = bringup_dir / 'launch'
     headless = LaunchConfiguration('headless')
     declare_headless_cmd = DeclareLaunchArgument(
-        'headless', default_value='True', description='Whether to execute gzclient)'
+        'headless', default_value='False', description='Whether to execute gzclient)'
     )
 
     return LaunchDescription(
@@ -53,13 +53,6 @@ def generate_launch_description():
                 cmd=['gz', 'sim', '-g', '-v4'],
                 output='screen',
                 condition=UnlessCondition(headless),
-            ),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(str(launch_dir / 'rviz_launch.py')),
-                launch_arguments={
-                    'use_sim_time': 'True',
-                    'rviz_config': str(bringup_dir / 'rviz' / 'nav2_default_view.rviz'),
-                }.items(),
             ),
         ]
     )
