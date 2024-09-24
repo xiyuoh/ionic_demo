@@ -20,10 +20,9 @@ from launch_ros.substitutions import FindPackageShare, FindPackagePrefix
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 
 from launch import LaunchDescription
-from launch.actions import AppendEnvironmentVariable, IncludeLaunchDescription
+from launch.actions import AppendEnvironmentVariable, DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, TextSubstitution
-
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 
 def generate_launch_description():
     ionic_demo_dir = Path(get_package_share_directory('ionic_demo'))
@@ -32,6 +31,10 @@ def generate_launch_description():
     rmf_demos_dir = Path(get_package_share_directory('rmf_demos'))
     ionic_maps_dir = Path(get_package_share_directory('ionic_demo_building_maps'))
     fleet_adapter_dir = Path(get_package_share_directory('fleet_adapter_nav2'))
+    server_uri = LaunchConfiguration('server_uri')
+    declare_server_uri_cmd = DeclareLaunchArgument(
+        'server_uri', default_value='', description='Open-RMF API server URI'
+    )
 
     teleport_ingestor_string = \
     '''
@@ -92,11 +95,7 @@ def generate_launch_description():
     return LaunchDescription([
         set_resource_path_vars,
         set_plugin_path_vars,
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([
-                str(ionic_demo_dir / 'launch' / 'ionic_moveit_demo_launch.py')
-            ]),
-        ),
+        declare_server_uri_cmd,
         Node(
             # Spawn the ingestor for delivery
             package="ros_gz_sim",
@@ -150,7 +149,10 @@ def generate_launch_description():
                 "-c", str(fleet_adapter_dir / 'config' / 'tb4_config.yaml'),
                 "-n", str(ionic_maps_dir / 'maps' / 'ionic_demo' / 'nav_graphs' / '0.yaml')
             ],
-            parameters=[{"use_sim_time": True}],
+            parameters=[{
+                "use_sim_time": True,
+                "server_uri": server_uri
+            }],
             remappings=[
                 ('/tf', '/tb4/tf'),
                 ('/tf_static', '/tb4/tf_static'),

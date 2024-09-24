@@ -37,7 +37,6 @@ def generate_launch_description():
     launch_dir = bringup_dir / 'launch'
     map_yaml_file = str(ionic_demo_dir / 'maps' / 'ionic_demo.yaml')
     nav2_params_file = str(ionic_demo_dir / 'params' / 'nav2_params.yaml')
-    namespace = '/tb4',
     namespace = LaunchConfiguration('namespace')
     use_namespace = LaunchConfiguration('use_namespace')
     declare_namespace_cmd = DeclareLaunchArgument(
