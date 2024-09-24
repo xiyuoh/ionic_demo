@@ -26,12 +26,6 @@ from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, 
 
 
 def generate_launch_description():
-    ionic_demo_dir = Path(get_package_share_directory('ionic_demo'))
-    rmf_demo_assets_dir = Path(get_package_share_directory('rmf_demos_assets')) / 'models'
-    rmf_plugins_dir = Path(get_package_prefix('rmf_robot_sim_gz_plugins')) / 'lib' / 'rmf_robot_sim_gz_plugins'
-    rmf_demos_dir = Path(get_package_share_directory('rmf_demos'))
-    ionic_maps_dir = Path(get_package_share_directory('ionic_demo_building_maps'))
-    fleet_adapter_dir = Path(get_package_share_directory('fleet_adapter_nav2'))
     coke_can_string = \
     '''
     <sdf version="1.6">
@@ -44,67 +38,7 @@ def generate_launch_description():
     </sdf>
     '''
 
-    teleport_ingestor_string = \
-    '''
-    <sdf version="1.6">
-        <include>
-            <name>coke_ingestor</name>
-            <uri>
-                model://TeleportIngestor
-            </uri>
-        </include>
-    </sdf>
-    '''
-
-    set_resource_path_vars = AppendEnvironmentVariable(
-        'GZ_SIM_RESOURCE_PATH', str(rmf_demo_assets_dir)
-    )
-    set_plugin_path_vars = AppendEnvironmentVariable(
-        'GZ_SIM_SYSTEM_PLUGIN_PATH', str(rmf_plugins_dir)
-    )
-
-    # URDF
-    _robot_description_xml = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution(
-                [FindPackageShare('panda_description'), 'urdf', 'panda.urdf.xacro']
-            ),
-            " ",
-            "name:=",
-            'panda',
-        ]
-    )
-    robot_description = {"robot_description": _robot_description_xml}
-
-    # SRDF
-    _robot_description_semantic_xml = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name="xacro")]),
-            " ",
-            PathJoinSubstitution(
-                [
-                    FindPackageShare('panda_moveit_config'),
-                    "srdf",
-                    "panda.srdf.xacro",
-                ]
-            ),
-            " ",
-            "name:=",
-            'panda',
-        ]
-    )
-    robot_description_semantic = {
-        "robot_description_semantic": _robot_description_semantic_xml
-    }
-    tb4_namespace = '/tb4'
-    nav2_bringup_dir = Path(get_package_share_directory('nav2_bringup'))
-    nav2_launch_dir = nav2_bringup_dir / 'launch'
-
     return LaunchDescription([
-        set_resource_path_vars,
-        set_plugin_path_vars,
         IncludeLaunchDescription(
             PythonLaunchDescriptionSource([
                 PathJoinSubstitution([
@@ -136,60 +70,6 @@ def generate_launch_description():
                 "-z", "1.2",
             ],
             parameters=[{"use_sim_time": True}],
-        ),
-        Node(
-            # Spawn a can for delivery
-            package="ros_gz_sim",
-            executable="create",
-            output="log",
-            arguments=[
-                "-string", teleport_ingestor_string,
-                "-x", "-0.75",
-                "-y", "2.55",
-                "-z", "0.75",
-            ],
-            parameters=[{"use_sim_time": True}],
-        ),
-        Node(
-            # Dispenser node to control moveit arm
-            package="ionic_demos_rmf",
-            executable="moveit_dispenser",
-            output="log",
-            parameters=[
-                robot_description,
-                robot_description_semantic,
-                {"use_sim_time": True},
-            ],
-        ),
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource(
-                str(ionic_demo_dir / 'launch' / 'tb4_spawn_launch.py')
-            ),
-        ),
-        # Launch RMF and RMF fleet adapter
-        IncludeLaunchDescription(
-            XMLLaunchDescriptionSource(
-                str(rmf_demos_dir / 'common.launch.xml')
-            ),
-            launch_arguments={
-                'use_sim_time': 'True',
-                'headless': 'True',
-                'config_file': str(ionic_maps_dir / 'ionic_demo' / 'ionic_demo.building.yaml'),
-            }.items(),
-        ),
-        Node(
-            package="fleet_adapter_nav2",
-            executable="fleet_adapter",
-            output="log",
-            arguments=[
-                "-c", str(fleet_adapter_dir / 'config' / 'tb4_config.yaml'),
-                "-n", str(ionic_maps_dir / 'maps' / 'ionic_demo' / 'nav_graphs' / '0.yaml')
-            ],
-            parameters=[{"use_sim_time": True}],
-            remappings=[
-                ('/tf', '/tb4/tf'),
-                ('/tf_static', '/tb4/tf_static'),
-            ]
         ),
     ])
 

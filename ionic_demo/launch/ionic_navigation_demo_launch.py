@@ -23,63 +23,37 @@ from launch.actions import (
     ExecuteProcess,
     IncludeLaunchDescription,
 )
-from launch.conditions import UnlessCondition
+from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
-    bringup_dir = Path(get_package_share_directory('nav2_bringup'))
-    ionic_demo_dir = Path(get_package_share_directory('ionic_demo'))
-    launch_dir = bringup_dir / 'launch'
-    headless = LaunchConfiguration('headless')
+    launch_dir = Path(get_package_share_directory('ionic_demo')) / 'launch'
+    run_gazebo = LaunchConfiguration('run_gazebo')
     declare_headless_cmd = DeclareLaunchArgument(
-        'headless', default_value='False', description='Whether to execute gzclient)'
+        'run_gazebo', default_value='True', description='Whether to run gazebo'
     )
-
-    rmf_demos_dir = Path(get_package_share_directory('rmf_demos'))
-    ionic_maps_dir = Path(get_package_share_directory('ionic_demo_building_maps'))
-    fleet_adapter_dir = Path(get_package_share_directory('fleet_adapter_nav2'))
 
     return LaunchDescription(
         [
             declare_headless_cmd,
             IncludeLaunchDescription(
                 PythonLaunchDescriptionSource(
-                    str(ionic_demo_dir / 'launch' / 'tb4_spawn_launch.py')
+                    str(launch_dir / 'world_launch.py')
                 ),
-            ),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    str(ionic_demo_dir / 'launch' / 'world_launch.py')
-                ),
+                condition=IfCondition(run_gazebo),
             ),
             ExecuteProcess(
                 cmd=['gz', 'sim', '-g', '-v4'],
                 output='screen',
-                condition=UnlessCondition(headless),
+                condition=IfCondition(run_gazebo),
             ),
-            # Launch RMF and RMF fleet adapter
             IncludeLaunchDescription(
-                XMLLaunchDescriptionSource(
-                    str(rmf_demos_dir / 'common.launch.xml')
+                PythonLaunchDescriptionSource(
+                    str(launch_dir / 'tb4_spawn_launch.py')
                 ),
-                launch_arguments={
-                    'use_sim_time': 'True',
-                    'headless': 'True',
-                    'config_file': str(ionic_maps_dir / 'ionic_demo' / 'ionic_demo.building.yaml'),
-                }.items(),
-            ),
-            Node(
-                package="fleet_adapter_nav2",
-                executable="fleet_adapter",
-                output="log",
-                arguments=[
-                    "-c", str(fleet_adapter_dir / 'config' / 'tb4_config.yaml'),
-                    "-n", str(ionic_maps_dir / 'maps' / 'ionic_demo' / 'nav_graphs' / '0.yaml')
-                ],
-                parameters=[{"use_sim_time": True}],
             ),
         ]
     )
