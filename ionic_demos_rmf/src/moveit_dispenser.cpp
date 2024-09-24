@@ -18,9 +18,6 @@
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <rclcpp/rclcpp.hpp>
 
-#include <gz/msgs.hh>
-#include <gz/transport.hh>
-
 #include <gz/sim/System.hh>
 
 #include <chrono>
@@ -49,21 +46,21 @@ using rmf_dispenser_msgs::msg::DispenserState;
 
 /* GRASP
  * -11
- * 27
+ * 30
  * 0
  *  -116
  *  0
- *  142
+ *  145
  *  0
 */
 
 /* PRE_DROP
- * 42
- * 36
- * 40
- * -115
- *  -34
- *  138
+ * 56
+ * 61
+ * 24
+ * -102
+ * -48
+ * 152
  *  0
 */
 
@@ -100,9 +97,6 @@ private:
   rclcpp::Publisher<DispenserResult>::SharedPtr dispenser_result_pub_;
   rclcpp::Publisher<DispenserState>::SharedPtr dispenser_state_pub_;
 
-  gz::transport::Node gz_node_;
-  gz::transport::Node::Publisher attaching_pub_;
-  gz::transport::Node::Publisher detaching_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
 
   bool attach_requested_ = false;
@@ -115,11 +109,9 @@ MoveItFollowTarget::MoveItFollowTarget() : Node("ex_follow_target"),
                                            gripper_move_group_(std::shared_ptr<rclcpp::Node>(std::move(this)), GRIPPER_GROUP)
 {
   // Use upper joint velocity and acceleration limits
-  this->move_group_.setMaxAccelerationScalingFactor(1.0);
-  this->move_group_.setMaxVelocityScalingFactor(1.0);
+  this->move_group_.setMaxAccelerationScalingFactor(0.3);
+  this->move_group_.setMaxVelocityScalingFactor(0.3);
   // TODO(luca) Add the poses to the robot here instead of the srdf
-  attaching_pub_ = gz_node_.Advertise<gz::msgs::Empty>("/panda/attach");
-  detaching_pub_ = gz_node_.Advertise<gz::msgs::Empty>("/panda/detach");
 
   dispenser_state_pub_ = this->create_publisher<DispenserState>("/dispenser_states", rclcpp::QoS(10));
   dispenser_result_pub_ = this->create_publisher<DispenserResult>("/dispenser_results", rclcpp::QoS(10));
@@ -131,12 +123,7 @@ MoveItFollowTarget::MoveItFollowTarget() : Node("ex_follow_target"),
 
 void MoveItFollowTarget::timer_callback()
 {
-  gz::msgs::Empty req;
-  if (!this->attach_requested_)
-  {
-    detaching_pub_.Publish(req);
-  }
-  // Also publish a dispenser state
+  // Publish a dispenser state
   this->publish_dispenser_state(false);
 }
 
@@ -177,7 +164,6 @@ void MoveItFollowTarget::dispenser_request_callback(const DispenserRequest::Cons
   this->past_request_guids_.insert(msg->request_guid);
   this->publish_dispenser_result(DispenserResult::ACKNOWLEDGED);
   this->publish_dispenser_state(true);
-  gz::msgs::Empty req;
   RCLCPP_INFO(this->get_logger(), "Received dispenser request");
   const auto ready = this->move_group_.getNamedTargetValues("ready");
   this->move_group_.setJointValueTarget(ready);
@@ -194,7 +180,6 @@ void MoveItFollowTarget::dispenser_request_callback(const DispenserRequest::Cons
   const auto close = this->gripper_move_group_.getNamedTargetValues("close");
   this->gripper_move_group_.setJointValueTarget(close);
   this->gripper_move_group_.move();
-  attaching_pub_.Publish(req);
   this->attach_requested_ = true;
   this->move_group_.setJointValueTarget(ready);
   this->move_group_.move();
@@ -207,7 +192,6 @@ void MoveItFollowTarget::dispenser_request_callback(const DispenserRequest::Cons
   this->gripper_move_group_.setJointValueTarget(open);
   this->gripper_move_group_.move();
   this->attach_requested_ = false;
-  detaching_pub_.Publish(req);
   this->move_group_.setJointValueTarget(pre_drop);
   this->move_group_.move();
   this->move_group_.setJointValueTarget(ready);

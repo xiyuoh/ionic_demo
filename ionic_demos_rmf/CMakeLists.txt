@@ -10,21 +10,15 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(moveit_ros_planning_interface REQUIRED)
 find_package(rmf_dispenser_msgs REQUIRED)
-find_package(gz_msgs_vendor REQUIRED)
-find_package(gz-msgs REQUIRED)
 find_package(gz_sim_vendor REQUIRED)
 find_package(gz-sim REQUIRED)
-find_package(gz_transport_vendor REQUIRED)
-find_package(gz-transport REQUIRED)
 
 ament_environment_hooks("${CMAKE_CURRENT_SOURCE_DIR}/hooks/${PROJECT_NAME}.dsv.in")
 
 add_executable(moveit_dispenser src/moveit_dispenser.cpp)
 # add_library(moveit_dispenser SHARED src/moveit_dispenser.cpp)
 target_link_libraries(moveit_dispenser
-  gz-msgs::core
   gz-sim::core
-  gz-transport::core
 )
 
 ament_target_dependencies(moveit_dispenser
