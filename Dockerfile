@@ -2,7 +2,7 @@
 FROM ros:rolling
 ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
-    && apt-get install -y dirmngr curl git python3 python3-docopt python3-yaml python3-distro python3-pip sudo mesa-utils wget \
+    && apt-get install -y dirmngr curl git python3 python3-docopt python3-yaml python3-distro python3-pip sudo mesa-utils \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 RUN git clone https://github.com/gazebo-tooling/gzdev \
@@ -27,8 +27,6 @@ RUN mkdir -p /root/ws/src
 WORKDIR /root/ws
 COPY ionic_demo.repos .
 RUN vcs import --input ionic_demo.repos src
-RUN wget https://raw.githubusercontent.com/open-rmf/rmf/main/rmf.repos
-RUN vcs import --input rmf.repos src
 RUN rosdep update
 RUN apt-get update \
     && rosdep install --from-paths src --ignore-src -r --rosdistro rolling -y \
