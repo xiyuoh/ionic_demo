@@ -74,6 +74,7 @@ docker run --network host -it --rm \
   -e RMW_IMPLEMENTATION=<RMW_IMPLEMENTATION> \
   ghcr.io/open-rmf/rmf-web/api-server:rolling
 ```
+The dashboard will be accessible at `localhost:3000` by default.
 
 Spawn the world and arm,
 
