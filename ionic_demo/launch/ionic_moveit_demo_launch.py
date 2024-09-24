@@ -132,7 +132,7 @@ def generate_launch_description():
             arguments=[
                 "-string", coke_can_string,
                 "-x", "4.9",
-                "-y", "0.3",
+                "-y", "0.37",
                 "-z", "1.2",
             ],
             parameters=[{"use_sim_time": True}],
@@ -144,9 +144,9 @@ def generate_launch_description():
             output="log",
             arguments=[
                 "-string", teleport_ingestor_string,
-                "-x", "-0.6",
-                "-y", "2.6",
-                "-z", "0.9",
+                "-x", "-0.75",
+                "-y", "2.55",
+                "-z", "0.75",
             ],
             parameters=[{"use_sim_time": True}],
         ),

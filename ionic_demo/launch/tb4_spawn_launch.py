@@ -53,7 +53,7 @@ def generate_launch_description():
     desc_dir = Path(get_package_share_directory('nav2_minimal_tb4_description'))
 
     # Launch configuration variables specific to simulation
-    robot_name = 'ionic_tb4'
+    robot_name = 'tb4'
     robot_sdf = xacro.process(ionic_demo_dir / 'models' / 'ionic_tb4.urdf.xacro')
 
     remappings = [('/tf', 'tf'), ('/tf_static', 'tf_static')]
