@@ -26,8 +26,6 @@ from launch.substitutions import Command, FindExecutable, LaunchConfiguration, P
 
 def generate_launch_description():
     ionic_demo_dir = Path(get_package_share_directory('ionic_demo'))
-    rmf_demo_assets_dir = Path(get_package_share_directory('rmf_demos_assets')) / 'models'
-    rmf_plugins_dir = Path(get_package_prefix('rmf_robot_sim_gz_plugins')) / 'lib' / 'rmf_robot_sim_gz_plugins'
     rmf_demos_dir = Path(get_package_share_directory('rmf_demos'))
     ionic_maps_dir = Path(get_package_share_directory('ionic_demo_building_maps'))
     fleet_adapter_dir = Path(get_package_share_directory('fleet_adapter_nav2'))
@@ -47,13 +45,6 @@ def generate_launch_description():
         </include>
     </sdf>
     '''
-
-    set_resource_path_vars = AppendEnvironmentVariable(
-        'GZ_SIM_RESOURCE_PATH', str(rmf_demo_assets_dir)
-    )
-    set_plugin_path_vars = AppendEnvironmentVariable(
-        'GZ_SIM_SYSTEM_PLUGIN_PATH', str(rmf_plugins_dir)
-    )
 
     # URDF
     _robot_description_xml = Command(
@@ -93,8 +84,6 @@ def generate_launch_description():
     tb4_namespace = '/tb4'
 
     return LaunchDescription([
-        set_resource_path_vars,
-        set_plugin_path_vars,
         declare_server_uri_cmd,
         Node(
             # Spawn the ingestor for delivery
