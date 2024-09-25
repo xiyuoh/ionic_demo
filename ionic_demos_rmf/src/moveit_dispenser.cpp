@@ -99,7 +99,6 @@ private:
 
   rclcpp::TimerBase::SharedPtr timer_;
 
-  bool attach_requested_ = false;
   std::unordered_set<std::string> past_request_guids_;
   std::string last_request_guid_;
 };
@@ -180,7 +179,8 @@ void MoveItFollowTarget::dispenser_request_callback(const DispenserRequest::Cons
   const auto close = this->gripper_move_group_.getNamedTargetValues("close");
   this->gripper_move_group_.setJointValueTarget(close);
   this->gripper_move_group_.move();
-  this->attach_requested_ = true;
+  this->move_group_.setJointValueTarget(pregrasp);
+  this->move_group_.move();
   this->move_group_.setJointValueTarget(ready);
   this->move_group_.move();
   const auto pre_drop = this->move_group_.getNamedTargetValues("pre_drop");
@@ -191,7 +191,6 @@ void MoveItFollowTarget::dispenser_request_callback(const DispenserRequest::Cons
   this->move_group_.move();
   this->gripper_move_group_.setJointValueTarget(open);
   this->gripper_move_group_.move();
-  this->attach_requested_ = false;
   this->move_group_.setJointValueTarget(pre_drop);
   this->move_group_.move();
   this->move_group_.setJointValueTarget(ready);

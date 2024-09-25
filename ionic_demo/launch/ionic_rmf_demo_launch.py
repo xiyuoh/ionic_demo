@@ -20,18 +20,19 @@ from launch_ros.substitutions import FindPackageShare, FindPackagePrefix
 from launch_xml.launch_description_sources import XMLLaunchDescriptionSource
 
 from launch import LaunchDescription
-from launch.actions import AppendEnvironmentVariable, IncludeLaunchDescription
+from launch.actions import AppendEnvironmentVariable, DeclareLaunchArgument, IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, FindExecutable, PathJoinSubstitution, TextSubstitution
-
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution, TextSubstitution
 
 def generate_launch_description():
     ionic_demo_dir = Path(get_package_share_directory('ionic_demo'))
-    rmf_demo_assets_dir = Path(get_package_share_directory('rmf_demos_assets')) / 'models'
-    rmf_plugins_dir = Path(get_package_prefix('rmf_robot_sim_gz_plugins')) / 'lib' / 'rmf_robot_sim_gz_plugins'
     rmf_demos_dir = Path(get_package_share_directory('rmf_demos'))
     ionic_maps_dir = Path(get_package_share_directory('ionic_demo_building_maps'))
     fleet_adapter_dir = Path(get_package_share_directory('fleet_adapter_nav2'))
+    server_uri = LaunchConfiguration('server_uri')
+    declare_server_uri_cmd = DeclareLaunchArgument(
+        'server_uri', default_value='', description='Open-RMF API server URI'
+    )
 
     teleport_ingestor_string = \
     '''
@@ -44,13 +45,6 @@ def generate_launch_description():
         </include>
     </sdf>
     '''
-
-    set_resource_path_vars = AppendEnvironmentVariable(
-        'GZ_SIM_RESOURCE_PATH', str(rmf_demo_assets_dir)
-    )
-    set_plugin_path_vars = AppendEnvironmentVariable(
-        'GZ_SIM_SYSTEM_PLUGIN_PATH', str(rmf_plugins_dir)
-    )
 
     # URDF
     _robot_description_xml = Command(
@@ -90,13 +84,7 @@ def generate_launch_description():
     tb4_namespace = '/tb4'
 
     return LaunchDescription([
-        set_resource_path_vars,
-        set_plugin_path_vars,
-        IncludeLaunchDescription(
-            PythonLaunchDescriptionSource([
-                str(ionic_demo_dir / 'launch' / 'ionic_moveit_demo_launch.py')
-            ]),
-        ),
+        declare_server_uri_cmd,
         Node(
             # Spawn the ingestor for delivery
             package="ros_gz_sim",
@@ -150,7 +138,10 @@ def generate_launch_description():
                 "-c", str(fleet_adapter_dir / 'config' / 'tb4_config.yaml'),
                 "-n", str(ionic_maps_dir / 'maps' / 'ionic_demo' / 'nav_graphs' / '0.yaml')
             ],
-            parameters=[{"use_sim_time": True}],
+            parameters=[{
+                "use_sim_time": True,
+                "server_uri": server_uri
+            }],
             remappings=[
                 ('/tf', '/tb4/tf'),
                 ('/tf_static', '/tb4/tf_static'),
