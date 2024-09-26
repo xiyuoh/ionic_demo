@@ -18,8 +18,8 @@
         <scene>scene</scene>
         <sky></sky>
         <camera_clip>
-          <near>0.25</near>
-          <far>50000</far>
+          <near>0.01</near>
+          <far>500</far>
         </camera_clip>
         <camera_pose>-5.4 -1.15 1.75 0.0 0.11 0.73</camera_pose>
       </plugin>
@@ -31,12 +31,12 @@
         </gz-gui>
         <enabled>true</enabled>
         <highQuality>true</highQuality>
-        <resolution>16 16 16</resolution>
+        <resolution>64 32 16</resolution>
         <octantCount>1 1 1</octantCount>
         <conserveMemory>true</conserveMemory>
         <thinWallCounter>1.0</thinWallCounter>
         <anisotropic>true</anisotropic>
-        <bounceCount>6</bounceCount>
+        <bounceCount>9</bounceCount>
       </plugin>
       <plugin filename="EntityContextMenuPlugin" name="Entity context menu">
         <gz-gui>
@@ -291,35 +291,21 @@
       <sky></sky>
     </scene>
 
-    <!--<light type="directional" name="directional">
-      <pose>0 0 4 0 0 0</pose>
-      <intensity>3</intensity>
-      <diffuse>1 0.98 0.98 1</diffuse>
-      <specular>.1 .1 .1 1</specular>
-      <attenuation>
-        <range>20</range>
-        <linear>0.2</linear>
-        <constant>0.8</constant>
-        <quadratic>0.01</quadratic>
-      </attenuation>
-      <cast_shadows>true</cast_shadows>
-    </light>-->
-
     <light type="spot" name="spot_grid">
-      <pose>-1 0.5 2.75 0 0 0</pose>
+      <pose>-3 0.5 2.7 0 0 0</pose>
       <diffuse>1 1 1 1</diffuse>
       <specular>1 1 1 1</specular>
-      <intensity>0.75</intensity>
+      <intensity>1</intensity>
       <attenuation>
         <range>12</range>
-        <linear>0.01</linear>
+        <linear>0.3</linear>
         <constant>0.2</constant>
         <quadratic>0.0</quadratic>
       </attenuation>
       <direction>0 0 -1</direction>
       <spot>
         <inner_angle>0</inner_angle>
-        <outer_angle>3</outer_angle>
+        <outer_angle>2.5</outer_angle>
         <falloff>1</falloff>
       </spot>
       <cast_shadows>true</cast_shadows>
@@ -329,17 +315,17 @@
       <pose>4 1.8 2.5 0 0 0</pose>
       <diffuse>1 1 1 1</diffuse>
       <specular>1 1 1 1</specular>
-      <intensity>0.75</intensity>
+      <intensity>1</intensity>
       <attenuation>
         <range>12</range>
-        <linear>0.01</linear>
+        <linear>0.3</linear>
         <constant>0.2</constant>
         <quadratic>0.0</quadratic>
       </attenuation>
       <direction>0 0 -1</direction>
       <spot>
         <inner_angle>0</inner_angle>
-        <outer_angle>3</outer_angle>
+        <outer_angle>2.5</outer_angle>
         <falloff>1</falloff>
       </spot>
       <cast_shadows>true</cast_shadows>
@@ -349,40 +335,284 @@
       <pose>9 1 2.75 0 0 0</pose>
       <diffuse>1 1 1 1</diffuse>
       <specular>1 1 1 1</specular>
-      <intensity>0.75</intensity>
+      <intensity>1</intensity>
       <attenuation>
         <range>12</range>
-        <linear>0.01</linear>
+        <linear>0.3</linear>
         <constant>0.2</constant>
         <quadratic>0.0</quadratic>
       </attenuation>
       <direction>0 0 -1</direction>
       <spot>
         <inner_angle>0</inner_angle>
-        <outer_angle>3</outer_angle>
+        <outer_angle>2.5</outer_angle>
         <falloff>1</falloff>
       </spot>
       <cast_shadows>true</cast_shadows>
     </light>
 
-    <!--<light type="point" name="point">
-      <pose>-1 0.5 4 0 0 0</pose>
+    <light type="point" name="point_column_01">
+      <pose>0 1.75 1.75 0 0 0</pose>
       <diffuse>1 1 1 1</diffuse>
       <specular>1 1 1 1</specular>
-      <intensity>1.5</intensity>
+      <intensity>1</intensity>
       <attenuation>
         <range>20</range>
         <linear>0.2</linear>
         <constant>0.8</constant>
-        <quadratic>0.01</quadratic>
+        <quadratic>0.5</quadratic>
       </attenuation>
-      <cast_shadows>true</cast_shadows>
-    </light>-->
+      <cast_shadows>false</cast_shadows>
+    </light>
 
+    <light type="point" name="point_column_02">
+      <pose>7.4 3.4 1.71 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>1 1 1 1</specular>
+      <intensity>1</intensity>
+      <attenuation>
+        <range>20</range>
+        <linear>0.2</linear>
+        <constant>0.8</constant>
+        <quadratic>0.5</quadratic>
+      </attenuation>
+      <cast_shadows>false</cast_shadows>
+    </light>
+
+    <light type="point" name="point_column_01">
+      <pose>0 1.75 1.75 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>1 1 1 1</specular>
+      <intensity>1</intensity>
+      <attenuation>
+        <range>20</range>
+        <linear>0.2</linear>
+        <constant>0.8</constant>
+        <quadratic>0.5</quadratic>
+      </attenuation>
+      <cast_shadows>false</cast_shadows>
+    </light>
+
+    <light type="point" name="point_column_02">
+      <pose>7.4 3.4 1.71 0 0 0</pose>
+      <diffuse>1 1 1 1</diffuse>
+      <specular>1 1 1 1</specular>
+      <intensity>1</intensity>
+      <attenuation>
+        <range>20</range>
+        <linear>0.2</linear>
+        <constant>0.8</constant>
+        <quadratic>0.5</quadratic>
+      </attenuation>
+      <cast_shadows>false</cast_shadows>
+    </light>
 
     <include>
       <name>Interior</name>
       <uri>interior</uri>
+      <plugin filename="gz-sim-detachable-joint-system"
+          name="gz::sim::systems::DetachableJoint">
+        <parent_link>base_link</parent_link>
+        <child_model>steak_set</child_model>
+        <child_link>link_0</child_link>
+        <detach_topic>/food/detach</detach_topic>
+        <attach_topic>/food/attach</attach_topic>
+      </plugin>
+
+    </include>
+
+    <!--
+        bullet-featherstone auto-deactivation demo.
+
+        Run the demo with bullet-featherstone physics plugin
+
+        Detach joints to make the breakfast_menu and steak_set meshes dynamic:
+
+            gz topic -t "/food/detach" -m gz.msgs.Empty -p "unused: true"
+
+        These models will become dynamic, which impacts physics
+        and causes RTF to drop (change max_step_size to 0.001 to make the
+        effect more evidient). After the collisions settle, the RTF should
+        come back up.
+    -->
+
+    <include>
+      <static>false</static>
+      <name>steak_set</name>
+      <pose>7.35 0.05 0.864 0 0 0.0</pose>
+      <uri>https://fuel.gazebosim.org/1.0/googleresearch/models/steak_set</uri>
+      <plugin filename="gz-sim-detachable-joint-system"
+          name="gz::sim::systems::DetachableJoint">
+        <parent_link>link_0</parent_link>
+        <child_model>steak_set_2</child_model>
+        <child_link>link_0</child_link>
+        <detach_topic>/food/detach</detach_topic>
+        <attach_topic>/food/attach</attach_topic>
+      </plugin>
+    </include>
+
+    <include>
+      <static>false</static>
+      <name>steak_set_2</name>
+      <pose>7.85 0.05 0.864 0 0 0.0</pose>
+      <uri>https://fuel.gazebosim.org/1.0/googleresearch/models/steak_set</uri>
+      <plugin filename="gz-sim-detachable-joint-system"
+          name="gz::sim::systems::DetachableJoint">
+        <parent_link>link_0</parent_link>
+        <child_model>steak_set_3</child_model>
+        <child_link>link_0</child_link>
+        <detach_topic>/food/detach</detach_topic>
+        <attach_topic>/food/attach</attach_topic>
+      </plugin>
+    </include>
+
+    <include>
+      <static>false</static>
+      <name>steak_set_3</name>
+      <pose>8.35 0.05 0.864 0 0 0.0</pose>
+      <uri>https://fuel.gazebosim.org/1.0/googleresearch/models/steak_set</uri>
+      <plugin filename="gz-sim-detachable-joint-system"
+          name="gz::sim::systems::DetachableJoint">
+        <parent_link>link_0</parent_link>
+        <child_model>steak_set_4</child_model>
+        <child_link>link_0</child_link>
+        <detach_topic>/food/detach</detach_topic>
+        <attach_topic>/food/attach</attach_topic>
+      </plugin>
+    </include>
+
+
+    <include>
+      <static>false</static>
+      <name>steak_set_4</name>
+      <pose>8.85 0.05 0.864 0 0 0.0</pose>
+      <uri>https://fuel.gazebosim.org/1.0/googleresearch/models/steak_set</uri>
+      <plugin filename="gz-sim-detachable-joint-system"
+          name="gz::sim::systems::DetachableJoint">
+        <parent_link>link_0</parent_link>
+        <child_model>steak_set_5</child_model>
+        <child_link>link_0</child_link>
+        <detach_topic>/food/detach</detach_topic>
+        <attach_topic>/food/attach</attach_topic>
+      </plugin>
+    </include>
+
+    <include>
+      <static>false</static>
+      <name>steak_set_5</name>
+      <pose>9.35 0.05 0.864 0 0 0.0</pose>
+      <uri>https://fuel.gazebosim.org/1.0/googleresearch/models/steak_set</uri>
+      <plugin filename="gz-sim-detachable-joint-system"
+          name="gz::sim::systems::DetachableJoint">
+        <parent_link>link_0</parent_link>
+        <child_model>steak_set_6</child_model>
+        <child_link>link_0</child_link>
+        <detach_topic>/food/detach</detach_topic>
+        <attach_topic>/food/attach</attach_topic>
+      </plugin>
+    </include>
+
+    <include>
+      <static>false</static>
+      <name>steak_set_6</name>
+      <pose>7.85 0.40 0.864 0 0 3.14</pose>
+      <uri>https://fuel.gazebosim.org/1.0/googleresearch/models/steak_set</uri>
+      <plugin filename="gz-sim-detachable-joint-system"
+          name="gz::sim::systems::DetachableJoint">
+        <parent_link>link_0</parent_link>
+        <child_model>steak_set_7</child_model>
+        <child_link>link_0</child_link>
+        <detach_topic>/food/detach</detach_topic>
+        <attach_topic>/food/attach</attach_topic>
+      </plugin>
+    </include>
+
+    <include>
+      <static>false</static>
+      <name>steak_set_7</name>
+      <pose>8.35 0.40 0.864 0 0 3.14</pose>
+      <uri>https://fuel.gazebosim.org/1.0/googleresearch/models/steak_set</uri>
+      <plugin filename="gz-sim-detachable-joint-system"
+          name="gz::sim::systems::DetachableJoint">
+        <parent_link>link_0</parent_link>
+        <child_model>steak_set_8</child_model>
+        <child_link>link_0</child_link>
+        <detach_topic>/food/detach</detach_topic>
+        <attach_topic>/food/attach</attach_topic>
+      </plugin>
+    </include>
+
+    <include>
+      <static>false</static>
+      <name>steak_set_8</name>
+      <pose>8.85 0.4 0.862 0 0 3.14</pose>
+      <uri>https://fuel.gazebosim.org/1.0/googleresearch/models/steak_set</uri>
+      <plugin filename="gz-sim-detachable-joint-system"
+          name="gz::sim::systems::DetachableJoint">
+        <parent_link>link_0</parent_link>
+        <child_model>steak_set_9</child_model>
+        <child_link>link_0</child_link>
+        <detach_topic>/food/detach</detach_topic>
+        <attach_topic>/food/attach</attach_topic>
+      </plugin>
+
+    </include>
+
+    <include>
+      <static>false</static>
+      <name>steak_set_9</name>
+      <pose>9.35 0.4 0.862 0 0 3.14</pose>
+      <uri>https://fuel.gazebosim.org/1.0/googleresearch/models/steak_set</uri>
+      <plugin filename="gz-sim-detachable-joint-system"
+          name="gz::sim::systems::DetachableJoint">
+        <parent_link>link_0</parent_link>
+        <child_model>breakfast_menu</child_model>
+        <child_link>link_0</child_link>
+        <detach_topic>/food/detach</detach_topic>
+        <attach_topic>/food/attach</attach_topic>
+      </plugin>
+    </include>
+
+    <!-- breakfast menus - 1 original, 1 convex decomposed, and
+         1 convex decomposed (low res) -->
+
+    <include>
+      <static>false</static>
+      <name>breakfast_menu</name>
+      <pose>-2.14 2.623 0.751 0 0 0.0</pose>
+      <uri>breakfast_menu_original</uri>
+      <plugin filename="gz-sim-detachable-joint-system"
+          name="gz::sim::systems::DetachableJoint">
+        <parent_link>link_0</parent_link>
+        <child_model>breakfast_menu_decomposed</child_model>
+        <child_link>link_0</child_link>
+        <detach_topic>/food/detach</detach_topic>
+        <attach_topic>/food/attach</attach_topic>
+      </plugin>
+
+    </include>
+
+    <include>
+      <static>false</static>
+      <name>breakfast_menu_decomposed</name>
+      <pose>-1.73 2.623 0.751 0 0 0.0</pose>
+      <uri>breakfast_menu_decomposed</uri>
+      <plugin filename="gz-sim-detachable-joint-system"
+          name="gz::sim::systems::DetachableJoint">
+        <parent_link>link_0</parent_link>
+        <child_model>breakfast_menu_convex_hull</child_model>
+        <child_link>link_0</child_link>
+        <detach_topic>/food/detach</detach_topic>
+        <attach_topic>/food/attach</attach_topic>
+      </plugin>
+    </include>
+
+    <include>
+      <static>false</static>
+      <name>breakfast_menu_convex_hull</name>
+      <pose>-1.73 2.85 0.751 0 0 0.0</pose>
+      <uri>breakfast_menu_convex_hull</uri>
     </include>
   </world>
 </sdf>
+
