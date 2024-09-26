@@ -57,13 +57,11 @@ In order to minimize race conditions, we recommend running each launch file one 
 
 Start the dashboard docker image,
 
-TODO(ac): Update the package URL before merging upstream.
-
 ```
 docker run --network host -it --rm \
   -e RMF_SERVER_URL=http://localhost:8000 \
   -e TRAJECTORY_SERVER_URL=http://localhost:8006 \
-  ghcr.io/xiyuoh/ionic_demo_rmf_dashboard:aaron-split-launch-and-web
+  ghcr.io/gazebosim/ionic_demo_rmf_dashboard:main
 ```
 
 Start the API server docker image, make sure to note the `ROS_DOMAIN_ID` and `RMW_IMPLEMENTATION`. This starts the API server on `localhost:8000`.
@@ -102,9 +100,3 @@ ros2 run rmf_demos_tasks dispatch_delivery -p bar -ph moveit_dispenser -d table_
 # Troubleshooting
 
 * If there are communication/middleware related issues while running the demos, we recommend trying again [using a different RMW implementation](https://docs.ros.org/en/jazzy/How-To-Guides/Working-with-multiple-RMW-implementations.html#specifying-rmw-implementations), for example `rmw_cyclonedds_cpp`.
-
-
-# TODOs
-
-* package descriptions
-* fleet adapter
